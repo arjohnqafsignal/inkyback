@@ -19,19 +19,33 @@ class AuthController extends Controller
 
         if(!$user)
         {
-            $userData['email'] = $request->email;
-            $userData['name'] = $request->name;
-            $userData['googele_id'] = $request->google_id;
-            $userData['image'] = $request->image;
-            $userData['password'] = bcrypt('$request->google_id');
+            $registerData['email'] = $request->email;
+            $registerData['name'] = $request->name;
+            $registerData['google_id'] = $request->google_id;
+            $registerData['image'] = $request->image;
+            $registerData['password'] = bcrypt($request->google_id);
         
-            $user = User::create();
+            $user = User::create($registerData);
+            $accessToken = $user->createToken('authToken')->accessToken;
         }
         else
         {
-            echo 2;
+            $loginData['email'] = $request->email;
+
+            $user = $this->auth($loginData);
+            $accessToken = $user->createToken('authToken')->accessToken;
         }
 
-        
+        return response()->json([
+            'user' => $user,
+            'token' => $accessToken
+        ], 200);
+    }
+
+    private function auth($loginData)
+    {
+        $user = User::where($loginData)->first();
+
+        return $user;
     }
 }
